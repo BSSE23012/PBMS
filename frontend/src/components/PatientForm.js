@@ -4,7 +4,7 @@ import axios from 'axios';
 import Notification from './Notifications';
 
 // The base URL for our backend API
-const API_URL = 'http://localhost:5001/api/patients';
+const API_URL = 'http://pbhms-prod-alb-1122644307.us-east-1.elb.amazonaws.com:80/api/patients';
 
 function PatientForm({ onPatientRegistered }) {
   const [formData, setFormData] = useState({

@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import Notification from './Notifications';
 
-const API_URL = 'http://localhost:5001/api/appointments';
+const API_URL = 'http://pbhms-prod-alb-1122644307.us-east-1.elb.amazonaws.com:80/api/appointments';
 
 function AppointmentForm({ patient }) {
   const [formData, setFormData] = useState({
