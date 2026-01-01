@@ -1,6 +1,5 @@
 const jwt = require('jsonwebtoken');
 const jwkToPem = require('jwk-to-pem');
-// const fetch = require('fetch'); // or use axios if already installed
 const fetch = require('node-fetch');
 
 const COGNITO_USER_POOL_ID = process.env.COGNITO_USER_POOL_ID;

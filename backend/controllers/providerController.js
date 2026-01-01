@@ -61,4 +61,42 @@ const getAllProviders = async (req, res) => {
   }
 };
 
-module.exports = { upsertProviderProfile, getAllProviders };
+
+// @desc    Get basic patient info by ID
+// @route   GET /api/providers/patient/:patientId
+// @access  Private (Providers only)
+const getPatientName = async (req, res) => {
+  const { patientId } = req.params;
+  const requesterGroups = req.user['cognito:groups'] || [];
+
+  if (!requesterGroups.includes('Providers')) {
+    return res.status(403).json({ message: 'Only providers can access patient information.' });
+  }
+
+  // We query the DynamoDB table for the patient's metadata using their ID
+  const params = {
+    TableName: TABLE_NAME,
+    Key: {
+      PK: `PATIENT#${patientId}`,
+      SK: 'METADATA', // We are looking for the user's profile metadata
+    },
+  };
+
+  try {
+    const { Item } = await docClient.send(new GetCommand(params));
+    if (Item && Item.userType === 'PATIENT') {
+      res.json({
+        patientId: Item.userId,
+        given_name: Item.given_name,
+        family_name: Item.family_name,
+      });
+    } else {
+      res.status(404).json({ message: 'Patient not found.' });
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Error fetching patient information', error: error.message });
+  }
+};
+
+module.exports = { upsertProviderProfile, getAllProviders, getPatientName };

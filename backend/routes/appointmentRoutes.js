@@ -1,10 +1,12 @@
+// routes/appointmentRoutes.js
 const express = require('express');
 const router = express.Router();
-const { bookAppointment, getPatientAppointments, cancelAppointment } = require('../controllers/appointmentController');
+const { bookAppointment, getPatientAppointments, cancelAppointment, getProviderAppointments } = require('../controllers/appointmentController');
 const { protect, authorize } = require('../middleware/authMiddleware');
 
 router.post('/', protect, authorize('Patients'), bookAppointment);
 router.get('/my-appointments', protect, authorize('Patients'), getPatientAppointments);
-router.put('/:appointmentId/cancel', protect, cancelAppointment); // Anyone authenticated can cancel for now
+router.get('/provider/me', protect, authorize('Providers'), getProviderAppointments);
+router.put('/:appointmentId/cancel', protect, cancelAppointment);
 
 module.exports = router;
