@@ -1,15 +1,10 @@
-// routes/appointmentRoutes.js
 const express = require('express');
 const router = express.Router();
-const {
-  bookAppointment,
-  getAppointmentsForPatient,
-} = require('../controllers/appointmentController');
+const { bookAppointment, getPatientAppointments, cancelAppointment } = require('../controllers/appointmentController');
+const { protect, authorize } = require('../middleware/authMiddleware');
 
-// Route for booking a new appointment
-router.post('/', bookAppointment);
-
-// Route for getting all appointments for a specific patient
-router.get('/patient/:patientId', getAppointmentsForPatient);
+router.post('/', protect, authorize('Patients'), bookAppointment);
+router.get('/my-appointments', protect, authorize('Patients'), getPatientAppointments);
+router.put('/:appointmentId/cancel', protect, cancelAppointment); // Anyone authenticated can cancel for now
 
 module.exports = router;

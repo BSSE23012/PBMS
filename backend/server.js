@@ -1,65 +1,43 @@
-// // server.js
-// const express = require('express');
-// const dotenv = require('dotenv');
-// const cors = require('cors');
-// const connectDB = require('./config/db');
-
-// // Import route files
-// const patientRoutes = require('./routes/patientRoutes');
-// const appointmentRoutes = require('./routes/appointmentRoutes');
-
-// // Load environment variables from .env file
-// dotenv.config();
-
-// // Connect to the database
-// connectDB();
-
-// const app = express();
-
-// // Middleware
-// app.use(cors()); // Enable Cross-Origin Resource Sharing
-// app.use(express.json()); // To accept JSON data in the request body
-
-// // A simple root route to test the server
-// app.get('/', (req, res) => {
-//   res.send('PBHMS API is running...');
-// });
-
-// // Mount routers
-// app.use('/api/patients', patientRoutes);
-// app.use('/api/appointments', appointmentRoutes);
-
-// // Set the port from environment variables or default to 5000
-// const PORT = process.env.PORT || 5000;
-
-// app.listen(PORT, () => {
-//   console.log(`Server is running on port ${PORT}`);
-// });
-
-// server.js
 const express = require('express');
 const dotenv = require('dotenv');
-const cors = require('cors');
-
-// NO MORE connectDB import or call
-
-const patientRoutes = require('./routes/patientRoutes');
-const appointmentRoutes = require('./routes/appointmentRoutes');
-
 dotenv.config();
+
+const cors = require('cors');
+const { protect } = require('./middleware/authMiddleware'); // For a test route
+
+// Load environment variables
+
+
+// Import route files
+const providerRoutes = require('./routes/providerRoutes');
+const appointmentRoutes = require('./routes/appointmentRoutes');
+const healthRecordRoutes = require('./routes/healthRecordRoutes');
 
 const app = express();
 
+// Middleware
 app.use(cors());
 app.use(express.json());
 
+// A simple root route
 app.get('/', (req, res) => {
   res.send('PBHMS API is running...');
 });
 
-app.use('/api/patients', patientRoutes);
-app.use('/api/appointments', appointmentRoutes);
+// A protected test route to check token authentication
+app.get('/api/test', protect, (req, res) => {
+    res.json({
+        message: 'You have accessed a protected route!',
+        user: req.user
+    });
+});
 
+// Mount routers
+app.use('/api/providers', providerRoutes);
+app.use('/api/appointments', appointmentRoutes);
+app.use('/api/health-records', healthRecordRoutes);
+
+// Set the port
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {
