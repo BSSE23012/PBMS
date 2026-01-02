@@ -1,6 +1,6 @@
 // controllers/providerController.js
 
-const { PutCommand, ScanCommand } = require('@aws-sdk/lib-dynamodb');
+const { PutCommand, ScanCommand, GetCommand, QueryCommand  } = require('@aws-sdk/lib-dynamodb');
 const { docClient } = require('../config/db');
 
 const TABLE_NAME = process.env.DYNAMODB_TABLE_NAME;
@@ -99,4 +99,47 @@ const getPatientName = async (req, res) => {
   }
 };
 
-module.exports = { upsertProviderProfile, getAllProviders, getPatientName };
+// @desc    Get a unique list of all patients for the logged-in provider
+// @route   GET /api/providers/my-patients
+// @access  Private (Providers only)
+const getMyPatients = async (req, res) => {
+  const providerId = req.user.sub;
+
+  // Use the same GSI query as the provider dashboard to get all appointments
+  const params = {
+    TableName: TABLE_NAME,
+    IndexName: 'ProviderScheduleIndex',
+    KeyConditionExpression: 'providerId = :pid',
+    ExpressionAttributeValues: { ':pid': providerId },
+  };
+
+  try {
+    const { Items } = await docClient.send(new QueryCommand(params));
+    
+    // Use a Map to automatically handle de-duplication of patients
+    const patientsMap = new Map();
+    Items.forEach(app => {
+      if (!patientsMap.has(app.patientId)) {
+        patientsMap.set(app.patientId, {
+          patientId: app.patientId,
+          patientName: app.patientName,
+        });
+      }
+    });
+
+    const uniquePatients = Array.from(patientsMap.values());
+    
+    res.json(uniquePatients);
+  } catch (error) {
+    console.error("Error fetching provider's patients:", error);
+    res.status(500).json({ message: 'Error fetching your patients', error: error.message });
+  }
+};
+
+
+module.exports = { 
+  upsertProviderProfile, 
+  getAllProviders, 
+  getPatientName,
+  getMyPatients,
+};
