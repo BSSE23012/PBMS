@@ -12,6 +12,7 @@ const { protect } = require('./middleware/authMiddleware'); // For a test route
 const providerRoutes = require('./routes/providerRoutes');
 const appointmentRoutes = require('./routes/appointmentRoutes');
 const healthRecordRoutes = require('./routes/healthRecordRoutes');
+const userRoutes = require('./routes/userRoutes'); 
 
 const app = express();
 
@@ -36,6 +37,7 @@ app.get('/api/test', protect, (req, res) => {
 app.use('/api/providers', providerRoutes);
 app.use('/api/appointments', appointmentRoutes);
 app.use('/api/health-records', healthRecordRoutes);
+app.use('/api/users', userRoutes);
 
 // Set the port
 const PORT = process.env.PORT || 5000;
