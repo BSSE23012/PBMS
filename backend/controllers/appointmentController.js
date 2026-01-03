@@ -1,8 +1,31 @@
+const { SNSClient, PublishCommand } = require('@aws-sdk/client-sns'); 
+const region = process.env.AWS_REGION || 'us-east-1';
+const snsClient = new SNSClient({ region });
+
 const { PutCommand, QueryCommand, UpdateCommand } = require('@aws-sdk/lib-dynamodb');
 const { docClient } = require('../config/db');
 const { v4: uuidv4 } = require('uuid');
+const axios = require('axios'); // <-- IMPORT AXIOS
 
 const TABLE_NAME = process.env.DYNAMODB_TABLE_NAME;
+
+// This new function will call our secure notification endpoint
+const sendNotification = async (appointmentDetails) => {
+  const NOTIFICATION_API_URL = process.env.NOTIFICATION_API_URL;
+  if (!NOTIFICATION_API_URL) {
+    console.log('NOTIFICATION_API_URL not set, skipping notification.');
+    return;
+  }
+  try {
+    await axios.post(NOTIFICATION_API_URL, appointmentDetails);
+    console.log('Successfully triggered notification for appointment:', appointmentDetails.appointmentId);
+  } catch (error) {
+    // We log the error but don't fail the main request.
+    // Booking the appointment is more important than the notification.
+    console.error('Failed to send notification:', error.message);
+  }
+};
+
 
 // @desc    Book a new appointment
 // @route   POST /api/appointments
@@ -32,6 +55,9 @@ const bookAppointment = async (req, res) => {
   try {
     // We can also create a duplicate item for the provider's view using a transaction
     await docClient.send(new PutCommand({ TableName: TABLE_NAME, Item: item }));
+
+    sendNotification(item);
+    
     res.status(201).json(item);
   } catch (error) {
     console.error(error);
