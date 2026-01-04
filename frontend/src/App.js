@@ -1,40 +1,65 @@
 // src/App.js
-import React, { useState } from 'react';
-import Header from './components/Header';
-import PatientForm from './components/PatientForm';
-import AppointmentForm from './components/AppointmentForm';
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { useAuth } from './context/AuthContext';
+import Layout from './components/Layout';
+import ProtectedRoute from './components/ProtectedRoute';
+
+import UnauthorizedPage from './pages/UnauthorizedPage';
+import Spinner from './components/Spinner';
+
+import HomePage from './pages/Homepage';
+import SignInPage from './pages/SignInPage';
+import SignUpPage from './pages/SignUpPage';
+import ConfirmSignUpPage from './pages/ConfirmSignUpPage';
+
+import PatientAppointmentsPage from './pages/PatientAppointmentsPage';
+import PatientHealthRecordsPage from './pages/PatientHealthRecordsPage';
+import PatientMedicalHistoryPage from './pages/PatientMedicalHistoryPage';
+
+import ProviderDashboardPage from './pages/ProviderDashboardPage';
+import ProvidersListPage from './pages/ProvidersListPage';
+import ProviderDetailPage from './pages/ProviderDetailPage';
 
 function App() {
-  // State to hold the newly registered patient's data
-  const [registeredPatient, setRegisteredPatient] = useState(null);
+  const { isLoading } = useAuth();
 
-  // This function will be called by the PatientForm upon successful registration
-  const handlePatientRegistration = (patientData) => {
-    setRegisteredPatient(patientData);
-  };
-
+  // Show a global spinner while the auth state is being determined
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-primary">
+        <Spinner />
+      </div>
+    );
+  }
+  
   return (
-    <div className="bg-gray-50 min-h-screen">
-      <Header />
-      <main className="container mx-auto p-8 flex flex-col items-center">
-        {/* Patient Registration Form */}
-        {!registeredPatient && (
-            <PatientForm onPatientRegistered={handlePatientRegistration} />
-        )}
-        
-        {/* Show a confirmation and the next step once registered */}
-        {registeredPatient && (
-            <div className="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 rounded-md shadow-md w-full max-w-md">
-                <p className="font-bold">Registration Complete!</p>
-                <p>Patient <span className="font-semibold">{registeredPatient.firstName} {registeredPatient.lastName}</span> has been successfully registered.</p>
-                <p className="mt-2">Please proceed to book an appointment below.</p>
-            </div>
-        )}
+    <Router>
+      <Routes>
+        <Route path="/" element={<Layout />}>
+          {/* Public Routes */}
+          <Route index element={<HomePage />} />
+          <Route path="signin" element={<SignInPage />} />
+          <Route path="signup" element={<SignUpPage />} />
+          <Route path="confirm-signup" element={<ConfirmSignUpPage />} />
+          <Route path="unauthorized" element={<UnauthorizedPage />} />
+          <Route path="providers" element={<ProvidersListPage />} />
+          <Route path="providers/:providerId" element={<ProviderDetailPage />} />
 
-        {/* Appointment Booking Form */}
-        <AppointmentForm patient={registeredPatient} />
-      </main>
-    </div>
+          {/* Patient Routes */}
+          <Route path="my-appointments" element={<ProtectedRoute allowedRoles={['Patients']}><PatientAppointmentsPage /></ProtectedRoute>} />
+          <Route path="my-records" element={<ProtectedRoute allowedRoles={['Patients']}><PatientHealthRecordsPage /></ProtectedRoute>} />
+
+          {/* Provider Routes */}
+          <Route path="dashboard" element={<ProtectedRoute allowedRoles={['Providers']}><ProviderDashboardPage /></ProtectedRoute>} />
+          <Route path="patient/:patientId/records" element={<ProtectedRoute allowedRoles={['Providers']}><PatientMedicalHistoryPage /></ProtectedRoute>} />
+
+          {/* Catch-all for 404 */}
+          <Route path="*" element={<div className="text-center p-12"><h1 className="text-3xl text-secondary">404: Page Not Found</h1></div>} />
+        </Route>
+
+      </Routes>
+    </Router>
   );
 }
 

@@ -1,0 +1,26 @@
+sudo dnf update -y
+sudo dnf install -y git nodejs
+sudo npm install -g pm2
+
+git clone https://github.com/BSSE23012/PBMS.git pbms
+
+# Go into the project directory
+cd pbms
+
+# Go into the backend sub-directory (adjust if your structure is different)
+cd backend
+
+# Install the Node.js packages for your app
+npm install
+
+# Create the file
+touch .env
+
+# Add the variables one by one
+echo "PORT=5001" >> .env
+echo "AWS_REGION=us-east-1" >> .env
+echo "COGNITO_USER_POOL_ID=us-east-1_iF7YEIpG0" >> .env
+echo "DYNAMODB_TABLE_NAME=PBHMS_Core" >> .env
+echo "NOTIFICATION_API_URL=https://lufmfxdf4g.execute-api.us-east-1.amazonaws.com/prod" >> .env
+
+pm2 start server.js --name pbhms-api
